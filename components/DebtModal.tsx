@@ -41,13 +41,11 @@ export default function DebtModal({
 
   const [formData, setFormData] = useState({
     name: "",
-    type: "",
     principal: 0,
     interestRate: 0,
     interestRateType: "MONTHLY",
     currency: "THB",
     termMonths: 12,
-    firstPaymentDate: "",
     note: "",
   });
 
@@ -55,19 +53,26 @@ export default function DebtModal({
     if (initialData) {
       setFormData({
         name: initialData.name || "",
-        type: initialData.type || "",
         principal: initialData.principal || 0,
         interestRate: initialData.interestRate || 0,
         interestRateType: initialData.interestRateType || "MONTHLY",
         currency: initialData.currency || "THB",
         termMonths: initialData.termMonths || 12,
-        firstPaymentDate: initialData.firstPaymentDate
-          ? new Date(initialData.firstPaymentDate).toISOString().split("T")[0]
-          : "",
         note: initialData.note || "",
       });
+    } else {
+      // Reset form when adding a new debt
+      setFormData({
+        name: "",
+        principal: 0,
+        interestRate: 0,
+        interestRateType: "MONTHLY",
+        currency: "THB",
+        termMonths: 12,
+        note: "",
+      });
     }
-  }, [initialData]);
+  }, [initialData, open]); // include `open` to reset when reopened
 
   const handleSubmit = async () => {
     const method = isEdit ? "PUT" : "POST";
@@ -96,16 +101,31 @@ export default function DebtModal({
 
   const Form = (
     <div className="space-y-2 p-1">
-      <Label>Name</Label>
-      <Input
-        value={formData.name}
-        onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
-      />
-      <Label>Type</Label>
-      <Input
-        value={formData.type}
-        onChange={(e) => setFormData((p) => ({ ...p, type: e.target.value }))}
-      />
+      <div className="flex flex-row gap-4">
+        <div className="w-full">
+          <Label>Name</Label>
+          <Input
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, name: e.target.value }))
+            }
+          />
+        </div>
+        <div className="w-2/5">
+          <Label>Term Months</Label>
+          <Input
+            type="number"
+            value={formData.termMonths}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                termMonths: parseInt(e.target.value) || 0,
+              }))
+            }
+          />
+        </div>
+      </div>
+
       <div className="flex flex-row gap-4">
         <div className="w-full  ">
           <Label>Principal</Label>
@@ -162,36 +182,12 @@ export default function DebtModal({
           />
         </div>
       </div>
-      <div className="flex flex-row gap-4">
-        <div className="w-full">
-          <Label>First Payment Date</Label>
-          <Input
-            type="date"
-            value={formData.firstPaymentDate}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, firstPaymentDate: e.target.value }))
-            }
-          />
-        </div>
-        <div className="w-2/5">
-          <Label>Term Months</Label>
-          <Input
-            type="number"
-            value={formData.termMonths}
-            onChange={(e) =>
-              setFormData((p) => ({
-                ...p,
-                termMonths: parseInt(e.target.value) || 0,
-              }))
-            }
-          />
-        </div>
-      </div>
-
       <Label>Note</Label>
       <Input
         value={formData.note}
         onChange={(e) => setFormData((p) => ({ ...p, note: e.target.value }))}
+        placeholder="Optional note"
+        className="min-h-20"
       />
 
       <Button className="w-full mt-4" onClick={handleSubmit}>

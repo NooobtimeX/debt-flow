@@ -1,6 +1,13 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Debt } from "@prisma/client";
 import { Pencil, Trash2 } from "lucide-react";
 
@@ -16,56 +23,58 @@ export default function DebtList({ debts, onEdit, onDelete }: DebtListProps) {
   }
 
   return (
-    <div className="grid gap-4">
-      {debts.map((debt) => (
-        <Card key={debt.id}>
-          <CardHeader className="flex justify-between items-center">
-            <div>
-              <CardTitle className="text-base font-medium">
-                {debt.name}
-              </CardTitle>
-              <Badge variant="outline" className="text-xs mt-1">
+    <Table>
+      <TableHeader>
+        <TableRow>
+          <TableHead>Name</TableHead>
+          <TableHead>Type</TableHead>
+          <TableHead>Principal</TableHead>
+          <TableHead>Interest</TableHead>
+          <TableHead>Start Date</TableHead>
+          <TableHead>Note</TableHead>
+          <TableHead className="text-right">Actions</TableHead>
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {debts.map((debt) => (
+          <TableRow key={debt.id}>
+            <TableCell className="font-medium">{debt.name}</TableCell>
+            <TableCell>
+              <Badge variant="outline" className="text-xs">
                 {debt.type}
               </Badge>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => onEdit(debt)}
-              >
-                <Pencil className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="destructive"
-                size="icon"
-                onClick={() => onDelete(debt.id)}
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="text-sm text-muted-foreground space-y-1">
-            <p>
-              <span className="font-medium">Principal:</span> ฿
-              {debt.principal.toLocaleString()}
-            </p>
-            <p>
-              <span className="font-medium">Interest:</span> {debt.interestRate}
-              % ({debt.interestRateType})
-            </p>
-            <p>
-              <span className="font-medium">Start:</span>{" "}
+            </TableCell>
+            <TableCell>฿{debt.principal.toLocaleString()}</TableCell>
+            <TableCell>
+              {debt.interestRate}% ({debt.interestRateType})
+            </TableCell>
+            <TableCell>
               {new Date(debt.firstPaymentDate).toLocaleDateString()}
-            </p>
-            {debt.note && (
-              <p>
-                <span className="font-medium">Note:</span> {debt.note}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      ))}
-    </div>
+            </TableCell>
+            <TableCell className="max-w-[200px] truncate">
+              {debt.note || "-"}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onEdit(debt)}
+                >
+                  <Pencil className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  onClick={() => onDelete(debt.id)}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
   );
 }

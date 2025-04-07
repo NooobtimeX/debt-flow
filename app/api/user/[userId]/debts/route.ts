@@ -32,13 +32,11 @@ export async function POST(
 
   const {
     name,
-    type,
     principal,
     interestRate,
     interestRateType,
     currency,
     termMonths,
-    firstPaymentDate,
     note,
   } = body;
 
@@ -49,13 +47,11 @@ export async function POST(
   const newDebt = await prisma.debt.create({
     data: {
       name,
-      type,
       principal,
       interestRate,
       interestRateType,
       currency,
       termMonths,
-      firstPaymentDate: new Date(firstPaymentDate),
       note,
       userId,
     },

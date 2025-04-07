@@ -7,8 +7,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { Debt } from "@prisma/client";
 import { useEffect, useState } from "react";
 
@@ -30,6 +37,8 @@ export default function DebtModal({
   initialData,
 }: DebtModalProps) {
   const isEdit = !!initialData?.id;
+  const isDesktop = useMediaQuery("(min-width: 768px)");
+
   const [formData, setFormData] = useState({
     name: "",
     type: "",
@@ -85,28 +94,20 @@ export default function DebtModal({
     }
   };
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>{isEdit ? "Edit Debt" : "Add New Debt"}</DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-2">
-          <Label>Name</Label>
-          <Input
-            value={formData.name}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, name: e.target.value }))
-            }
-          />
-          <Label>Type</Label>
-          <Input
-            value={formData.type}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, type: e.target.value }))
-            }
-          />
+  const Form = (
+    <div className="space-y-2 p-1">
+      <Label>Name</Label>
+      <Input
+        value={formData.name}
+        onChange={(e) => setFormData((p) => ({ ...p, name: e.target.value }))}
+      />
+      <Label>Type</Label>
+      <Input
+        value={formData.type}
+        onChange={(e) => setFormData((p) => ({ ...p, type: e.target.value }))}
+      />
+      <div className="flex flex-row gap-4">
+        <div className="w-full  ">
           <Label>Principal</Label>
           <Input
             type="number"
@@ -118,20 +119,22 @@ export default function DebtModal({
               }))
             }
           />
-          <Label>Interest Rate (%)</Label>
+        </div>
+        <div className="w-2/5">
+          <Label>Currency</Label>
           <Input
-            type="number"
-            value={formData.interestRate}
+            value={formData.currency}
             onChange={(e) =>
-              setFormData((p) => ({
-                ...p,
-                interestRate: parseFloat(e.target.value) || 0,
-              }))
+              setFormData((p) => ({ ...p, currency: e.target.value }))
             }
           />
-          <Label>Interest Rate Type</Label>
+        </div>
+      </div>
+      <div className="flex flex-row gap-4">
+        <div className="w-full">
+          <Label className="mb-1 block">Interest Rate Type</Label>
           <select
-            className="w-full border rounded px-3 py-2"
+            className="w-full h-10 rounded-md border px-3 py-2 text-sm"
             value={formData.interestRateType}
             onChange={(e) =>
               setFormData((p) => ({
@@ -143,13 +146,34 @@ export default function DebtModal({
             <option value="MONTHLY">MONTHLY</option>
             <option value="YEARLY">YEARLY</option>
           </select>
-          <Label>Currency</Label>
+        </div>
+        <div className="w-2/5">
+          <Label className="mb-1 block">Interest Rate (%)</Label>
           <Input
-            value={formData.currency}
+            type="number"
+            className="h-10" // ensure height matches select
+            value={formData.interestRate}
             onChange={(e) =>
-              setFormData((p) => ({ ...p, currency: e.target.value }))
+              setFormData((p) => ({
+                ...p,
+                interestRate: parseFloat(e.target.value) || 0,
+              }))
             }
           />
+        </div>
+      </div>
+      <div className="flex flex-row gap-4">
+        <div className="w-full">
+          <Label>First Payment Date</Label>
+          <Input
+            type="date"
+            value={formData.firstPaymentDate}
+            onChange={(e) =>
+              setFormData((p) => ({ ...p, firstPaymentDate: e.target.value }))
+            }
+          />
+        </div>
+        <div className="w-2/5">
           <Label>Term Months</Label>
           <Input
             type="number"
@@ -161,30 +185,40 @@ export default function DebtModal({
               }))
             }
           />
-          <Label>First Payment Date</Label>
-          <Input
-            type="date"
-            value={formData.firstPaymentDate}
-            onChange={(e) =>
-              setFormData((p) => ({
-                ...p,
-                firstPaymentDate: e.target.value,
-              }))
-            }
-          />
-          <Label>Note</Label>
-          <Input
-            value={formData.note}
-            onChange={(e) =>
-              setFormData((p) => ({ ...p, note: e.target.value }))
-            }
-          />
-
-          <Button className="w-full mt-4" onClick={handleSubmit}>
-            {isEdit ? "Save Changes" : "Add Debt"}
-          </Button>
         </div>
+      </div>
+
+      <Label>Note</Label>
+      <Input
+        value={formData.note}
+        onChange={(e) => setFormData((p) => ({ ...p, note: e.target.value }))}
+      />
+
+      <Button className="w-full mt-4" onClick={handleSubmit}>
+        {isEdit ? "Save Changes" : "Add Debt"}
+      </Button>
+    </div>
+  );
+
+  return isDesktop ? (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{isEdit ? "Edit Debt" : "Add New Debt"}</DialogTitle>
+        </DialogHeader>
+        {Form}
       </DialogContent>
     </Dialog>
+  ) : (
+    <Drawer open={open} onOpenChange={onClose}>
+      <DrawerContent className="p-2">
+        <DrawerHeader>
+          <DrawerTitle className="text-center">
+            {isEdit ? "Edit Debt" : "Add New Debt"}
+          </DrawerTitle>
+        </DrawerHeader>
+        {Form}
+      </DrawerContent>
+    </Drawer>
   );
 }

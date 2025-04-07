@@ -47,19 +47,21 @@ export default function NavigationHeaderDesktop({
       </div>
 
       {/* Menu Items */}
-      <div className="flex items-center gap-2 mx-auto">
-        {menuItems.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="group px-4 py-2 transition-colors duration-500 font-bold hover:text-primary"
-          >
-            <div className="flex flex-col items-center">
-              <div className="text-center">{item.title}</div>
-            </div>
-          </Link>
-        ))}
-      </div>
+      {!isLoggedIn && (
+        <div className="flex items-center gap-2 mx-auto">
+          {menuItems.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="group px-4 py-2 transition-colors duration-500 font-bold hover:text-primary"
+            >
+              <div className="flex flex-col items-center">
+                <div className="text-center">{item.title}</div>
+              </div>
+            </Link>
+          ))}
+        </div>
+      )}
 
       {/* Right side: */}
       <div className="flex items-center gap-2 mx-auto">
@@ -73,13 +75,19 @@ export default function NavigationHeaderDesktop({
               </Button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent align="end">
+            <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem asChild>
                 <Link href="/dashboard">📋 Dashboard</Link>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => signOut()}>
+              {/* Divider */}
+              <div className="border-t my-1" />
+              <Button
+                variant={"destructive"}
+                onClick={() => signOut()}
+                className="w-full"
+              >
                 🚪 Sign out
-              </DropdownMenuItem>
+              </Button>
 
               {/* Divider */}
               <div className="border-t my-1" />

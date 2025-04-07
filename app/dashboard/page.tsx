@@ -2,7 +2,7 @@
 
 import DebtList from "@/components/DebtList";
 import DebtModal from "@/components/DebtModal";
-import DebtSummary from "@/components/DebtSummary";
+import DebtSummaryToggle from "@/components/summary/DebtSummaryToggle";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Debt } from "@prisma/client";
@@ -108,7 +108,7 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <DebtSummary debts={debts} />
+      <DebtSummaryToggle debts={debts} />
       <Separator />
 
       <div className="space-y-3">

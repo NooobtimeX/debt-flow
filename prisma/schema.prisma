@@ -9,32 +9,34 @@ datasource db {
 
 // Types of interest rate intervals for debt repayment
 enum InterestRateType {
-  MONTHLY      // Monthly payment
-  YEARLY       // Yearly payment
+  MONTHLY // Monthly payment
+  YEARLY // Yearly payment
 }
 
 model User {
   id        String   @id @default(cuid())
   name      String?
   email     String   @unique
-  password  String   // Hashed password
-  image     String?  // Optional profile image
-  debts     Debt[]   // List of debts linked to this user
+  password  String // Hashed password
+  image     String? // Optional profile image
+  debts     Debt[] // List of debts linked to this user
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
 model Debt {
-  id                String           @id @default(uuid())
-  name              String           // Name/label of the debt
-  principal         Float            // Original loan amount (principal)
-  interestRate      Float            // Interest rate in percentage (e.g., 5.5 = 5.5%)
-  interestRateType  InterestRateType // Type of interest rate interval
-  currency          String           // Currency (e.g., "THB", "USD")
-  termMonths        Int              // Total duration in months
-  note              String?          // Optional note or remark
-  userId            String
-  user              User             @relation(fields: [userId], references: [id])
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  id               String           @id @default(uuid())
+  name             String
+  principal        Float
+  interestRate     Float
+  interestRateType InterestRateType
+  currency         String
+  termMonths       Int
+  note             String?
+  extraMonthlyPay  Float? // ✅ NEW: Extra amount user plans to pay monthly
+  isRevolving      Boolean          @default(false) // ✅ NEW: Credit card-style (flexible) debt flag
+  userId           String
+  user             User             @relation(fields: [userId], references: [id])
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 }

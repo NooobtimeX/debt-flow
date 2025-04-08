@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { Debt } from "@prisma/client";
+import currencyCodes from "currency-codes";
 import { useEffect, useState } from "react";
 
 interface DebtModalProps {
@@ -39,6 +40,8 @@ export default function DebtModal({
   const isEdit = !!initialData?.id;
   const isDesktop = useMediaQuery("(min-width: 768px)");
 
+  const allCurrencies = currencyCodes.codes(); // get all currency codes
+
   const [formData, setFormData] = useState({
     name: "",
     principal: 0,
@@ -47,6 +50,8 @@ export default function DebtModal({
     currency: "THB",
     termMonths: 12,
     note: "",
+    extraMonthlyPay: 0,
+    isRevolving: false,
   });
 
   useEffect(() => {
@@ -59,9 +64,10 @@ export default function DebtModal({
         currency: initialData.currency || "THB",
         termMonths: initialData.termMonths || 12,
         note: initialData.note || "",
+        extraMonthlyPay: initialData.extraMonthlyPay || 0,
+        isRevolving: initialData.isRevolving || false,
       });
     } else {
-      // Reset form when adding a new debt
       setFormData({
         name: "",
         principal: 0,
@@ -70,9 +76,11 @@ export default function DebtModal({
         currency: "THB",
         termMonths: 12,
         note: "",
+        extraMonthlyPay: 0,
+        isRevolving: false,
       });
     }
-  }, [initialData, open]); // include `open` to reset when reopened
+  }, [initialData, open]);
 
   const handleSubmit = async () => {
     const method = isEdit ? "PUT" : "POST";
@@ -127,7 +135,7 @@ export default function DebtModal({
       </div>
 
       <div className="flex flex-row gap-4">
-        <div className="w-full  ">
+        <div className="w-full">
           <Label>Principal</Label>
           <Input
             type="number"
@@ -142,14 +150,22 @@ export default function DebtModal({
         </div>
         <div className="w-2/5">
           <Label>Currency</Label>
-          <Input
+          <select
+            className="w-full h-10 rounded-md border px-3 py-2 text-sm"
             value={formData.currency}
             onChange={(e) =>
               setFormData((p) => ({ ...p, currency: e.target.value }))
             }
-          />
+          >
+            {allCurrencies.map((code) => (
+              <option key={code} value={code}>
+                {code}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
+
       <div className="flex flex-row gap-4">
         <div className="w-full">
           <Label className="mb-1 block">Interest Rate Type</Label>
@@ -171,7 +187,7 @@ export default function DebtModal({
           <Label className="mb-1 block">Interest Rate (%)</Label>
           <Input
             type="number"
-            className="h-10" // ensure height matches select
+            className="h-10"
             value={formData.interestRate}
             onChange={(e) =>
               setFormData((p) => ({
@@ -182,6 +198,40 @@ export default function DebtModal({
           />
         </div>
       </div>
+
+      <div className="flex flex-row gap-4">
+        <div className="w-full">
+          <Label>Extra Monthly Payment</Label>
+          <Input
+            type="number"
+            value={formData.extraMonthlyPay}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                extraMonthlyPay: parseFloat(e.target.value) || 0,
+              }))
+            }
+          />
+        </div>
+        <div className="w-2/5 flex flex-col justify-between items-center">
+          <Label htmlFor="revolving" className="text-center">
+            Credit-style debt
+          </Label>
+          <input
+            id="revolving"
+            type="checkbox"
+            className="w-4 h-4 mb-3"
+            checked={formData.isRevolving}
+            onChange={(e) =>
+              setFormData((p) => ({
+                ...p,
+                isRevolving: e.target.checked,
+              }))
+            }
+          />
+        </div>
+      </div>
+
       <Label>Note</Label>
       <Input
         value={formData.note}

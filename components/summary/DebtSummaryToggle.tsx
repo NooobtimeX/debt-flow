@@ -7,6 +7,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { useMediaQuery } from "@/lib/hooks/use-media-query";
 import { Debt } from "@prisma/client";
 import { useState } from "react";
 import {
@@ -27,6 +28,7 @@ interface DebtSummaryToggleProps {
 export default function DebtSummaryToggle({ debts }: DebtSummaryToggleProps) {
   const [view, setView] = useState("summary");
   const [open, setOpen] = useState(true);
+  const isDesktop = useMediaQuery("(min-width: 768px)");
 
   return (
     <Card>
@@ -47,37 +49,50 @@ export default function DebtSummaryToggle({ debts }: DebtSummaryToggleProps) {
         </CardHeader>
         <CollapsibleContent>
           <CardContent>
-            <ToggleGroup
-              type="single"
-              value={view}
-              onValueChange={(value) => value && setView(value)}
-              className="w-full mb-4"
-            >
-              <ToggleGroupItem
-                value="summary"
-                className="flex-1 justify-center"
+            {isDesktop ? (
+              <ToggleGroup
+                type="single"
+                value={view}
+                onValueChange={(value) => value && setView(value)}
+                className="w-full mb-4"
               >
-                <FaListUl className="w-4 h-4 mr-1" />
-                Summary
-              </ToggleGroupItem>
-              <ToggleGroupItem value="chart" className="flex-1 justify-center">
-                <FaChartPie className="w-4 h-4 mr-1" />
-                Pie Chart
-              </ToggleGroupItem>
-              <ToggleGroupItem
-                value="timeline"
-                className="flex-1 justify-center"
+                <ToggleGroupItem
+                  value="summary"
+                  className="flex-1 justify-center"
+                >
+                  <FaListUl className="w-4 h-4 mr-1" />
+                  Summary
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="chart"
+                  className="flex-1 justify-center"
+                >
+                  <FaChartPie className="w-4 h-4 mr-1" />
+                  Pie Chart
+                </ToggleGroupItem>
+                <ToggleGroupItem
+                  value="timeline"
+                  className="flex-1 justify-center"
+                >
+                  <FaChartLine className="w-4 h-4 mr-1" />
+                  Timeline
+                </ToggleGroupItem>
+              </ToggleGroup>
+            ) : (
+              <select
+                value={view}
+                onChange={(e) => setView(e.target.value)}
+                className="w-full mb-4 border rounded-md px-3 py-2 text-sm"
               >
-                <FaChartLine className="w-4 h-4 mr-1" />
-                Timeline
-              </ToggleGroupItem>
-            </ToggleGroup>
+                <option value="summary">📋 Summary</option>
+                <option value="chart">📊 Pie Chart</option>
+                <option value="timeline">📈 Timeline</option>
+              </select>
+            )}
 
             {view === "summary" && <DebtSummaryDetails debts={debts} />}
             {view === "chart" && <DebtPieChart debts={debts} />}
-            {view === "timeline" && debts.length > 0 && (
-              <DebtTimelineChart debt={debts[0]} />
-            )}
+            {view === "timeline" && <DebtTimelineChart debts={debts} />}
           </CardContent>
         </CollapsibleContent>
       </Collapsible>

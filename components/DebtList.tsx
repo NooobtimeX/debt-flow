@@ -37,57 +37,70 @@ export default function DebtList({ debts, onEdit, onDelete }: DebtListProps) {
   return (
     <Card>
       <Dialog>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Principal</TableHead>
-              <TableHead>Interest</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {debts.map((debt) => (
-              <TableRow key={debt.id}>
-                <TableCell className="font-medium">{debt.name}</TableCell>
-                <TableCell>฿{debt.principal.toLocaleString()}</TableCell>
-                <TableCell>
-                  {debt.interestRate}% ({debt.interestRateType})
-                </TableCell>
-                <TableCell className="text-right">
-                  <div className="flex justify-end gap-2">
-                    <DialogTrigger asChild>
-                      <Button
-                        variant="secondary"
-                        size="icon"
-                        onClick={() =>
-                          setSelectedNote(debt.note ?? "No note provided.")
-                        }
-                      >
-                        <StickyNote className="w-4 h-4" />
-                      </Button>
-                    </DialogTrigger>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      onClick={() => onEdit(debt)}
-                    >
-                      <Pencil className="w-4 h-4" />
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="icon"
-                      onClick={() => onDelete(debt.id)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </TableCell>
+        <div className="overflow-x-auto w-full">
+          <Table className="min-w-[600px]">
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Principal</TableHead>
+                <TableHead>Interest</TableHead>
+                <TableHead>Extra Payment</TableHead>
+                <TableHead>Credit-style</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
-
+            </TableHeader>
+            <TableBody>
+              {debts.map((debt) => (
+                <TableRow key={debt.id}>
+                  <TableCell className="font-medium">{debt.name}</TableCell>
+                  <TableCell>฿{debt.principal.toLocaleString()}</TableCell>
+                  <TableCell>
+                    {debt.interestRate}% ({debt.interestRateType})
+                  </TableCell>
+                  <TableCell>
+                    {debt.extraMonthlyPay
+                      ? `฿${debt.extraMonthlyPay.toLocaleString()}`
+                      : "–"}
+                  </TableCell>
+                  <TableCell>{debt.isRevolving ? "✅ Yes" : "❌ No"}</TableCell>
+                  <TableCell className="text-right">
+                    <div className="flex justify-end gap-2">
+                      <DialogTrigger asChild>
+                        <Button
+                          variant="secondary"
+                          size="icon"
+                          onClick={() =>
+                            setSelectedNote(
+                              debt.note?.trim()
+                                ? debt.note
+                                : "No note provided."
+                            )
+                          }
+                        >
+                          <StickyNote className="w-4 h-4" />
+                        </Button>
+                      </DialogTrigger>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => onEdit(debt)}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => onDelete(debt.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>📝 Note</DialogTitle>

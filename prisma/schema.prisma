@@ -32,9 +32,10 @@ model Debt {
   interestRateType InterestRateType
   currency         String
   termMonths       Int
+  startDate        DateTime         @default(now()) // ✅ NEW: Debt start date
   note             String?
-  extraMonthlyPay  Float? // ✅ NEW: Extra amount user plans to pay monthly
-  isRevolving      Boolean          @default(false) // ✅ NEW: Credit card-style (flexible) debt flag
+  extraMonthlyPay  Float?
+  isRevolving      Boolean          @default(false)
   userId           String
   user             User             @relation(fields: [userId], references: [id])
   createdAt        DateTime         @default(now())

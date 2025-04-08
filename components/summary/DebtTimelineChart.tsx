@@ -1,6 +1,7 @@
 "use client";
 
 import { Debt } from "@prisma/client";
+import { addMonths, format, parseISO } from "date-fns";
 import {
   Bar,
   BarChart,
@@ -17,12 +18,11 @@ interface DebtTimelineChartProps {
 }
 
 interface TimelinePoint {
-  month: number;
-  totalRemaining: number;
+  monthKey: string;
+  totalPayment: number;
   [debtId: string]: number | string;
 }
 
-// 🎨 Color generator
 function generateColorByIndex(index: number): string {
   const palette = [
     "#8884d8",
@@ -37,11 +37,10 @@ function generateColorByIndex(index: number): string {
   return palette[index % palette.length];
 }
 
-// 📊 Generate timeline for each debt
 function generateDebtTimeline(debt: Debt): {
   id: string;
   name: string;
-  timeline: { month: number; remaining: number }[];
+  timeline: { monthKey: string; payment: number }[];
 } {
   const {
     principal,
@@ -50,16 +49,20 @@ function generateDebtTimeline(debt: Debt): {
     interestRateType,
     extraMonthlyPay,
     isRevolving = false,
+    startDate,
     id,
     name,
   } = debt;
 
   const extraPay = extraMonthlyPay ?? 0;
   const rate = interestRate / 100 / (interestRateType === "YEARLY" ? 12 : 1);
-  const timeline: { month: number; remaining: number }[] = [];
+  const timeline: { monthKey: string; payment: number }[] = [];
 
   let remaining = principal;
   let month = 0;
+  const baseDate = parseISO(
+    typeof startDate === "string" ? startDate : new Date().toISOString()
+  );
 
   if (isRevolving) {
     while (remaining > 0 && month < 600) {
@@ -70,34 +73,41 @@ function generateDebtTimeline(debt: Debt): {
       if (actualPay <= interest) break;
 
       remaining = Math.max(0, remaining - principalPaid);
+      const currentDate = addMonths(baseDate, month);
       timeline.push({
-        month: ++month,
-        remaining: parseFloat(remaining.toFixed(2)),
+        monthKey: format(currentDate, "yyyy-MM"),
+        payment: parseFloat(actualPay.toFixed(2)),
       });
+      month++;
     }
   } else {
-    const payment =
+    const fixedPayment =
       (principal * rate) / (1 - Math.pow(1 + rate, -termMonths)) + extraPay;
-    for (let i = 1; i <= termMonths && remaining > 0; i++) {
+
+    for (let i = 0; i < termMonths && remaining > 0; i++) {
       const interest = remaining * rate;
-      const principalPaid = payment - interest;
+      const principalPaid = Math.min(remaining, fixedPayment - interest);
+      const actualPay = principalPaid + interest;
       remaining = Math.max(0, remaining - principalPaid);
-      timeline.push({ month: i, remaining: parseFloat(remaining.toFixed(2)) });
+      const currentDate = addMonths(baseDate, i);
+      timeline.push({
+        monthKey: format(currentDate, "yyyy-MM"),
+        payment: parseFloat(actualPay.toFixed(2)),
+      });
     }
   }
 
   return { id, name, timeline };
 }
 
-// 🔀 Merge timelines & compute totalRemaining
 function mergeTimelines(debts: Debt[]): TimelinePoint[] {
-  const merged: Record<number, TimelinePoint> = {};
+  const merged: Record<string, TimelinePoint> = {};
 
   debts.forEach((debt) => {
     const { id, timeline } = generateDebtTimeline(debt);
-    timeline.forEach(({ month, remaining }) => {
-      if (!merged[month]) merged[month] = { month, totalRemaining: 0 };
-      merged[month][id] = remaining;
+    timeline.forEach(({ monthKey, payment }) => {
+      if (!merged[monthKey]) merged[monthKey] = { monthKey, totalPayment: 0 };
+      merged[monthKey][id] = payment;
     });
   });
 
@@ -105,17 +115,16 @@ function mergeTimelines(debts: Debt[]): TimelinePoint[] {
     let total = 0;
     debts.forEach((debt) => {
       const val = point[debt.id];
-      if (typeof val === "number") {
-        total += val;
-      }
+      if (typeof val === "number") total += val;
     });
-    point.totalRemaining = parseFloat(total.toFixed(2));
+    point.totalPayment = parseFloat(total.toFixed(2));
   });
 
-  return Object.values(merged).sort((a, b) => a.month - b.month);
+  return Object.values(merged).sort(
+    (a, b) => new Date(a.monthKey).getTime() - new Date(b.monthKey).getTime()
+  );
 }
 
-// ✅ Chart component
 export default function DebtTimelineChart({ debts }: DebtTimelineChartProps) {
   const data = mergeTimelines(debts);
 
@@ -124,9 +133,12 @@ export default function DebtTimelineChart({ debts }: DebtTimelineChartProps) {
       <ResponsiveContainer>
         <BarChart data={data} stackOffset="sign">
           <CartesianGrid strokeDasharray="3 3" />
-          <XAxis dataKey="month" />
+          <XAxis dataKey="monthKey" tick={false} />
           <YAxis />
-          <Tooltip />
+          <Tooltip
+            labelFormatter={(key) => format(new Date(key + "-01"), "MMMM yyyy")}
+            formatter={(value: any) => `฿${value.toLocaleString()}`}
+          />
           {debts.map((debt, index) => (
             <Bar
               key={debt.id}
@@ -138,12 +150,12 @@ export default function DebtTimelineChart({ debts }: DebtTimelineChartProps) {
           ))}
           <Line
             type="monotone"
-            dataKey="totalRemaining"
+            dataKey="totalPayment"
             stroke="#ff0000"
             strokeWidth={2}
             dot
             strokeDasharray="4 2"
-            name="Total Remaining"
+            name="Total Monthly Payment"
           />
         </BarChart>
       </ResponsiveContainer>

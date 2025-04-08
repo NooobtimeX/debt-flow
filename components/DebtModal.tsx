@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -15,9 +16,16 @@ import {
 } from "@/components/ui/drawer";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { useMediaQuery } from "@/lib/hooks/use-media-query";
+import { cn } from "@/lib/utils";
 import { Debt } from "@prisma/client";
 import currencyCodes from "currency-codes";
+import { format } from "date-fns";
 import { useEffect, useState } from "react";
 
 interface DebtModalProps {
@@ -39,8 +47,7 @@ export default function DebtModal({
 }: DebtModalProps) {
   const isEdit = !!initialData?.id;
   const isDesktop = useMediaQuery("(min-width: 768px)");
-
-  const allCurrencies = currencyCodes.codes(); // get all currency codes
+  const allCurrencies = currencyCodes.codes();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -52,6 +59,7 @@ export default function DebtModal({
     note: "",
     extraMonthlyPay: 0,
     isRevolving: false,
+    startDate: new Date().toISOString(),
   });
 
   useEffect(() => {
@@ -66,18 +74,9 @@ export default function DebtModal({
         note: initialData.note || "",
         extraMonthlyPay: initialData.extraMonthlyPay || 0,
         isRevolving: initialData.isRevolving || false,
-      });
-    } else {
-      setFormData({
-        name: "",
-        principal: 0,
-        interestRate: 0,
-        interestRateType: "MONTHLY",
-        currency: "THB",
-        termMonths: 12,
-        note: "",
-        extraMonthlyPay: 0,
-        isRevolving: false,
+        startDate: initialData.startDate
+          ? new Date(initialData.startDate).toISOString()
+          : new Date().toISOString(),
       });
     }
   }, [initialData, open]);
@@ -230,6 +229,39 @@ export default function DebtModal({
             }
           />
         </div>
+      </div>
+
+      <div className="w-full">
+        <Label>Start Date</Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              className={cn(
+                "w-full justify-start text-left font-normal",
+                !formData.startDate && "text-muted-foreground"
+              )}
+            >
+              {formData.startDate
+                ? format(new Date(formData.startDate), "PPP")
+                : "Pick a date"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-auto p-0" align="start">
+            <Calendar
+              mode="single"
+              selected={new Date(formData.startDate)}
+              onSelect={(date) =>
+                date &&
+                setFormData((p) => ({
+                  ...p,
+                  startDate: format(date, "yyyy-MM-dd'T'HH:mm:ssXXX"),
+                }))
+              }
+              initialFocus
+            />
+          </PopoverContent>
+        </Popover>
       </div>
 
       <Label>Note</Label>
